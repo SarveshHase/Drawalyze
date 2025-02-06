@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import calculatorRouter from './routes/calculator.js';
+import calculatorRouter from './routes/calculator.route.js';
 import { SERVER_URL, PORT, ENV } from './config/constants.js';
 
 const app = express();
