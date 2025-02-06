@@ -31,7 +31,9 @@ function Home() {
     const [showResults, setShowResults] = useState(false)
     const [isEraser, setIsEraser] = useState(false)
     const [strokeWidth, setStrokeWidth] = useState(3)
+    const [previousStrokeWidth, setPreviousStrokeWidth] = useState(3)
     const [showTools, setShowTools] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
 
     useEffect(() => {
         if (!reset) {
@@ -174,7 +176,9 @@ function Home() {
             return;
         }
 
+        setIsLoading(true);
         try {
+            // Get the current hostname and port for the backend URL
             const response = await axios({
                 method: 'post',
                 url: `${import.meta.env.VITE_BACKEND_URL}/calculate`,
@@ -188,7 +192,9 @@ function Home() {
             setShowResults(true);
         } catch (error) {
             console.error("Error calculating:", error);
-            // Optionally show error to user
+            alert("Failed to analyze. Please check your connection and try again.");
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -203,6 +209,8 @@ function Home() {
 
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = color;
+        // Restore previous pen stroke width
+        setStrokeWidth(previousStrokeWidth);
     };
 
     const handleEraserClick = () => {
@@ -215,6 +223,9 @@ function Home() {
 
         ctx.globalCompositeOperation = 'destination-out';
         ctx.strokeStyle = 'rgba(0,0,0,1)';
+        // Store current stroke width and set eraser width to 100
+        setPreviousStrokeWidth(strokeWidth);
+        setStrokeWidth(100);
     };
 
     // Add style tag to document head
@@ -282,7 +293,7 @@ function Home() {
                                 value={strokeWidth}
                                 onChange={setStrokeWidth}
                                 min={1}
-                                max={20}
+                                max={isEraser ? 100 : 20}
                                 label="Stroke Width"
                                 className="mt-2"
                             />
@@ -300,9 +311,19 @@ function Home() {
                             <Button
                                 onClick={sendData}
                                 variant="default"
-                                className="px-4 bg-blue-500 hover:bg-blue-600"
+                                className="px-4 bg-blue-500 hover:bg-blue-600 relative"
+                                disabled={isLoading}
                             >
-                                Analyze
+                                {isLoading ? (
+                                    <>
+                                        <span className="opacity-0">Analyze</span>
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    'Analyze'
+                                )}
                             </Button>
                         </div>
                     </div>
@@ -368,7 +389,7 @@ function Home() {
                                 value={strokeWidth}
                                 onChange={setStrokeWidth}
                                 min={1}
-                                max={20}
+                                max={isEraser ? 100 : 20}
                                 label="Stroke Width"
                             />
                         </div>
@@ -385,9 +406,19 @@ function Home() {
                             <Button
                                 onClick={sendData}
                                 variant="default"
-                                className="flex-1 bg-blue-500 hover:bg-blue-600"
+                                className="flex-1 bg-blue-500 hover:bg-blue-600 relative"
+                                disabled={isLoading}
                             >
-                                Analyze
+                                {isLoading ? (
+                                    <>
+                                        <span className="opacity-0">Analyze</span>
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    'Analyze'
+                                )}
                             </Button>
                         </div>
                     </div>

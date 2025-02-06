@@ -8,7 +8,7 @@ export async function analyzeImage(base64Image, dictOfVars) {
         // Remove the data:image/png;base64, prefix if present
         const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const prompt = `You have been given an image to analyze. Please provide:
         1. A brief one-line description of what you see (keep it under 10 words)
