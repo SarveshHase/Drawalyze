@@ -12,7 +12,7 @@ export async function analyzeImage(base64Image, dictOfVars) {
 
         const prompt = `You have been given an image to analyze. Please provide:
         1. A brief one-line description of what you see (keep it under 10 words)
-        2. A detailed interpretation or analysis of the image
+        2. A detailed interpretation or analysis of the image(don't include description about the background color of canvas in your response, both in brief and detailed interpretation)
 
         If it's a mathematical expression or equation:
         - Include the solution in your detailed interpretation
