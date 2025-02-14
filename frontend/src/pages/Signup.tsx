@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import authService from '@/appwrite/auth';
 import { Button } from '@/components/ui/button';
 import { useAppDispatch } from '@/store/hooks';
@@ -12,6 +13,7 @@ const Signup: React.FC = () => {
   const [signupStatus, setSignupStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,13 +22,10 @@ const Signup: React.FC = () => {
     try {
       const userData = await authService.createAccount({ email, password, name });
       if (userData) {
-        dispatch(login({
-          email: userData.email,
-          name: userData.name,
-          userId: userData.$id,
-          emailVerified: false
-        }));
         setSignupStatus('success');
+        setTimeout(() => {
+          navigate('/login');
+        }, 5000); // Give user time to read the verification instructions
       }
     } catch (err: any) {
       setError(err.message);
@@ -42,8 +41,10 @@ const Signup: React.FC = () => {
           <>
             <h2 className="text-2xl font-bold mb-6 text-center text-green-600">Account Created Successfully!</h2>
             <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
-              <p className="text-gray-700 mb-2">A verification email has been sent to your email address.</p>
-              <p className="text-gray-700">Please check your inbox and click the verification link to complete the signup process.</p>
+            <p className="text-gray-700 mb-2">A verification email has been sent to your email address.</p>
+            <p className="text-gray-700">Please check your inbox and click the verification link.</p>
+            <p className="text-gray-700 mt-4">Redirecting to login page in 5 seconds...</p>
+            <p className="text-gray-500 text-sm mt-2">You can login after verifying your email.</p>
             </div>
           </>
         ) : (
@@ -92,6 +93,15 @@ const Signup: React.FC = () => {
                 {isLoading ? 'Signing up...' : 'Sign Up'}
               </Button>
             </form>
+            <p className="mt-4 text-center text-sm text-gray-600">
+              Already have an account?{' '}
+              <button
+                onClick={() => navigate('/login')}
+                className="text-blue-500 hover:text-blue-600 font-medium"
+              >
+                Login
+              </button>
+            </p>
           </>
         )}
       </div>

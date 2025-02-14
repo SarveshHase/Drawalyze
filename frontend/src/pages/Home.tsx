@@ -1,14 +1,18 @@
-import React, { useEffect, useState } from 'react'
-import { colors } from '../../constants.ts'
-import axios from 'axios'
-import { Button } from '@/components/ui/button'
-import { ColorSwatch, Slider } from '@mantine/core'
-import { Menu, X, Eraser, PenLine } from 'lucide-react'
-import '@mantine/core/styles.css'
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { logout, selectUserData } from '@/store/features/authSlice';
+import { colors } from '../constants';
+import axios from 'axios';
+import { Button } from '@/components/ui/button';
+import { ColorSwatch, Slider } from '@mantine/core';
+import { Menu, X, Eraser, PenLine } from 'lucide-react';
+import '@mantine/core/styles.css';
+import authService from '@/appwrite/auth';
 
 interface Response {
-    expr: string;    // Brief description
-    result: string;  // Detailed interpretation
+    expr: string;
+    result: string;
     assign: boolean;
 }
 
@@ -22,47 +26,60 @@ const cursorCSS = `
   }
 `;
 
-function Home() {
-    const canvasRef = React.useRef<HTMLCanvasElement>(null)
-    const [isDrawing, setIsDrawing] = useState(false)
-    const [color, setColor] = useState('rgb(255, 255, 255)')
-    const [reset, setReset] = useState(false)
-    const [responses, setResponses] = useState<Response[]>([])
-    const [showResults, setShowResults] = useState(false)
-    const [isEraser, setIsEraser] = useState(false)
-    const [strokeWidth, setStrokeWidth] = useState(3)
-    const [previousStrokeWidth, setPreviousStrokeWidth] = useState(3)
-    const [showTools, setShowTools] = useState(false)
-    const [isLoading, setIsLoading] = useState(false)
+const Home = () => {
+    const canvasRef = React.useRef<HTMLCanvasElement>(null);
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [color, setColor] = useState('rgb(255, 255, 255)');
+    const [reset, setReset] = useState(false);
+    const [responses, setResponses] = useState<Response[]>([]);
+    const [showResults, setShowResults] = useState(false);
+    const [isEraser, setIsEraser] = useState(false);
+    const [strokeWidth, setStrokeWidth] = useState(3);
+    const [previousStrokeWidth, setPreviousStrokeWidth] = useState(3);
+    const [showTools, setShowTools] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
+    const dispatch = useAppDispatch();
+    const userData = useAppSelector(selectUserData);
+
+    // Initialize canvas on mount
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Set initial canvas size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Set initial context properties
+        ctx.lineCap = 'round';
+        ctx.lineWidth = strokeWidth;
+        ctx.strokeStyle = color;
+    }, []); // Only run once on mount
 
     useEffect(() => {
-        if (!reset) {
-            return;
-        }
-
+        if (!reset) return;
         resetCanvas();
         setReset(false);
-    }, [reset])
+    }, [reset]);
 
     useEffect(() => {
         const updateCanvasSize = () => {
             const canvas = canvasRef.current;
             if (!canvas) return;
 
-            // Store the current drawing
             const ctx = canvas.getContext('2d');
             if (!ctx) return;
 
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-            // Update canvas size
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            // Restore drawing
             ctx.putImageData(imageData, 0, 0);
-
-            // Reset context properties
             ctx.lineCap = 'round';
             ctx.lineWidth = strokeWidth;
         };
@@ -71,7 +88,6 @@ function Home() {
         return () => window.removeEventListener('resize', updateCanvasSize);
     }, [strokeWidth]);
 
-    // Update stroke width without clearing canvas
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -82,48 +98,51 @@ function Home() {
         ctx.lineWidth = strokeWidth;
     }, [strokeWidth]);
 
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = cursorCSS;
+        document.head.appendChild(style);
+        return () => {
+            document.head.removeChild(style);
+        };
+    }, []);
+
+    // Drawing handlers
     const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const ctx = canvas.getContext('2d')
+        const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        ctx.beginPath()
+        ctx.beginPath();
         ctx.moveTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
         setIsDrawing(true);
 
-        // Set the composite operation based on whether we're erasing or drawing
         ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
         ctx.strokeStyle = isEraser ? 'rgba(0,0,0,1)' : color;
-    }
-
-    const stopDrawing = () => {
-        setIsDrawing(false);
-    }
+    };
 
     const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
-        if (!isDrawing) {
-            return;
-        }
+        if (!isDrawing) return;
 
         const canvas = canvasRef.current;
-        if (!canvas) {
-            return;
-        }
+        if (!canvas) return;
 
-        const ctx = canvas.getContext('2d')
-        if (!ctx) {
-            return;
-        }
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
 
-        // Set the composite operation and color based on current tool
         ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
         ctx.strokeStyle = isEraser ? 'rgba(0,0,0,1)' : color;
         ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
         ctx.stroke();
-    }
+    };
 
+    const stopDrawing = () => {
+        setIsDrawing(false);
+    };
+
+    // Touch handlers
     const startTouchDrawing = (e: React.TouchEvent<HTMLCanvasElement>) => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -137,7 +156,6 @@ function Home() {
         ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
         setIsDrawing(true);
 
-        // Set the composite operation based on whether we're erasing or drawing
         ctx.globalCompositeOperation = isEraser ? 'destination-out' : 'source-over';
         ctx.strokeStyle = isEraser ? 'rgba(0,0,0,1)' : color;
     };
@@ -154,12 +172,12 @@ function Home() {
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
 
-        // Keep the current composite operation and color
         ctx.strokeStyle = isEraser ? 'rgba(0,0,0,1)' : color;
         ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
         ctx.stroke();
     };
 
+    // Canvas operations
     const resetCanvas = () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -170,15 +188,39 @@ function Home() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     };
 
+    const handlePenClick = () => {
+        setIsEraser(false);
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = color;
+        setStrokeWidth(previousStrokeWidth);
+    };
+
+    const handleEraserClick = () => {
+        setIsEraser(true);
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = 'rgba(0,0,0,1)';
+        setPreviousStrokeWidth(strokeWidth);
+        setStrokeWidth(100);
+    };
+
     const sendData = async () => {
         const canvas = canvasRef.current;
-        if (!canvas) {
-            return;
-        }
+        if (!canvas) return;
 
         setIsLoading(true);
         try {
-            // Get the current hostname and port for the backend URL
             const response = await axios({
                 method: 'post',
                 url: `${import.meta.env.VITE_BACKEND_URL}/calculate`,
@@ -196,56 +238,42 @@ function Home() {
         } finally {
             setIsLoading(false);
         }
-    }
-
-    // Update the button click handlers
-    const handlePenClick = () => {
-        setIsEraser(false);
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.strokeStyle = color;
-        // Restore previous pen stroke width
-        setStrokeWidth(previousStrokeWidth);
     };
 
-    const handleEraserClick = () => {
-        setIsEraser(true);
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.strokeStyle = 'rgba(0,0,0,1)';
-        // Store current stroke width and set eraser width to 100
-        setPreviousStrokeWidth(strokeWidth);
-        setStrokeWidth(100);
+    const handleLogout = async () => {
+        try {
+            await authService.logout();
+            dispatch(logout());
+            navigate('/login');
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
     };
 
-    // Add style tag to document head
-    useEffect(() => {
-        const style = document.createElement('style');
-        style.textContent = cursorCSS;
-        document.head.appendChild(style);
-        return () => {
-            document.head.removeChild(style);
-        };
-    }, []);
-
-    // Update canvas className
-    const canvasClassName = `fixed inset-0 w-full h-full bg-gray-900 ${isEraser ? 'eraser-cursor' : 'pen-cursor'
-        }`;
+    const canvasClassName = `fixed inset-0 w-full h-full bg-gray-900 ${
+        isEraser ? 'eraser-cursor' : 'pen-cursor'
+    }`;
 
     return (
         <div className="fixed inset-0 overflow-hidden bg-gray-900">
+            {/* Nav Bar */}
+            <div className="fixed top-0 left-0 right-0 z-40 bg-gray-800/90 backdrop-blur-sm">
+                <div className="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center">
+                    <h1 className="text-white font-semibold">Drawalyze</h1>
+                    <div className="flex items-center gap-4">
+                        <span className="text-white">Welcome, {userData?.name}</span>
+                        <Button
+                            onClick={handleLogout}
+                            className="bg-red-500 hover:bg-red-600 text-white"
+                        >
+                            Logout
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
             {/* Tools Panel - Desktop */}
-            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-30 hidden md:block">
+            <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-30 hidden md:block">
                 <div className="bg-gray-800/90 backdrop-blur-sm rounded-lg p-4 shadow-lg">
                     <div className="flex items-center gap-4">
                         {/* Drawing Tools */}
@@ -480,7 +508,7 @@ function Home() {
 
             <canvas
                 ref={canvasRef}
-                id='canvas'
+                id="canvas"
                 className={canvasClassName}
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
@@ -491,7 +519,7 @@ function Home() {
                 onTouchEnd={stopDrawing}
             />
         </div>
-    )
-}
+  );
+};
 
-export default Home
+export default Home;
