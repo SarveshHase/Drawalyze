@@ -12,7 +12,8 @@ function App() {
   return (
     <MantineProvider>
       <BrowserRouter>
-        <Routes>
+        <div className="min-h-screen w-full bg-gray-900">
+          <Routes>
           <Route path="/" element={
             <ProtectedRoute>
               <Home />
@@ -22,7 +23,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/verify" element={<VerifyEmail />} />
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+          </Routes>
+        </div>
       </BrowserRouter>
     </MantineProvider>
   );
