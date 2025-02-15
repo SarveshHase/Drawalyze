@@ -6,9 +6,11 @@ import { colors } from '../constants';
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { ColorSwatch, Slider } from '@mantine/core';
-import { Menu, X, Eraser, PenLine } from 'lucide-react';
+import { Menu, X, Eraser, PenLine, Save } from 'lucide-react';
 import '@mantine/core/styles.css';
 import authService from '@/appwrite/auth';
+import storageService from '@/appwrite/storage';
+import SaveImageModal from '@/components/SaveImageModal';
 
 interface Response {
     expr: string;
@@ -38,6 +40,8 @@ const Home = () => {
     const [previousStrokeWidth, setPreviousStrokeWidth] = useState(3);
     const [showTools, setShowTools] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [showSaveModal, setShowSaveModal] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const userData = useAppSelector(selectUserData);
@@ -271,12 +275,21 @@ const Home = () => {
                     <h1 className="text-white font-semibold">Drawalyze</h1>
                     <div className="flex items-center gap-4">
                         <span className="text-white">Welcome, {userData?.name}</span>
-                        <Button
-                            onClick={handleLogout}
-                            className="bg-red-500 hover:bg-red-600 text-white"
-                        >
-                            Logout
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                onClick={() => setShowSaveModal(true)}
+                                className="bg-green-500 hover:bg-green-600 text-white"
+                            >
+                                <Save className="h-4 w-4 mr-2" />
+                                Save Drawing
+                            </Button>
+                            <Button
+                                onClick={handleLogout}
+                                className="bg-red-500 hover:bg-red-600 text-white"
+                            >
+                                Logout
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -527,8 +540,49 @@ const Home = () => {
                 onTouchMove={touchDraw}
                 onTouchEnd={stopDrawing}
             />
+
+            <SaveImageModal 
+                isOpen={showSaveModal}
+                onClose={() => setShowSaveModal(false)}
+                isLoading={isSaving}
+                onSave={async (title, description) => {
+                    try {
+                        setIsSaving(true);
+                        const canvas = canvasRef.current;
+                        if (!canvas || !userData) return;
+
+                        // Convert canvas to blob
+                        const blob = await new Promise<Blob>((resolve) => {
+                            canvas.toBlob((blob) => {
+                                if (blob) resolve(blob);
+                            }, 'image/png');
+                        });
+
+                        // Create File object from blob
+                        const file = new File([blob], 'drawing.png', { type: 'image/png' });
+
+                        // Upload to storage
+                        const uploadResponse = await storageService.uploadImage(file);
+                        
+                        // Save metadata to database
+                        await storageService.saveDrawingMetadata({
+                            userId: userData.userId,
+                            fileId: uploadResponse.$id,
+                            title,
+                            description,
+                        });
+
+                        setShowSaveModal(false);
+                    } catch (error) {
+                        console.error('Error saving drawing:', error);
+                        alert('Failed to save drawing. Please try again.');
+                    } finally {
+                        setIsSaving(false);
+                    }
+                }}
+            />
         </div>
-  );
+    );
 };
 
 export default Home;
