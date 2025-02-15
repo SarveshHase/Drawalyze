@@ -189,6 +189,10 @@ const Home = () => {
     };
 
     const handlePenClick = () => {
+        // Store eraser width if currently using eraser
+        if (isEraser) {
+            setPreviousStrokeWidth(strokeWidth);
+        }
         setIsEraser(false);
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -198,10 +202,15 @@ const Home = () => {
 
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = color;
+        // Restore previous pen width
         setStrokeWidth(previousStrokeWidth);
     };
 
     const handleEraserClick = () => {
+        // Only store pen width when switching from pen to eraser
+        if (!isEraser) {
+            setPreviousStrokeWidth(strokeWidth);
+        }
         setIsEraser(true);
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -211,7 +220,7 @@ const Home = () => {
 
         ctx.globalCompositeOperation = 'destination-out';
         ctx.strokeStyle = 'rgba(0,0,0,1)';
-        setPreviousStrokeWidth(strokeWidth);
+        // Always set eraser width to 100
         setStrokeWidth(100);
     };
 

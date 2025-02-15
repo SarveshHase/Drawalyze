@@ -5,6 +5,7 @@ import Signup from './pages/Signup';
 import Login from './pages/Login';
 import VerifyEmail from './pages/VerifyEmail';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import PublicRoute from '@/components/PublicRoute';
 import '@/index.css';
 import { MantineProvider } from '@mantine/core';
 
@@ -19,8 +20,16 @@ function App() {
               <Home />
             </ProtectedRoute>
           } />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={
+            <PublicRoute>
+              <Signup />
+            </PublicRoute>
+          } />
+          <Route path="/login" element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          } />
           <Route path="/verify" element={<VerifyEmail />} />
           <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
