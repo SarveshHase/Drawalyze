@@ -268,14 +268,14 @@ const Home = () => {
     }`;
 
     return (
-        <div className="fixed inset-0 overflow-hidden bg-gray-900">
+        <div className="fixed inset-0 md:overflow-hidden bg-gray-900 touch-none">
             {/* Nav Bar */}
             <div className="fixed top-0 left-0 right-0 z-40 bg-gray-800/90 backdrop-blur-sm">
                 <div className="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center">
                     <h1 className="text-white font-semibold">Drawalyze</h1>
                     <div className="flex items-center gap-4">
                         <span className="text-white">Welcome, {userData?.name}</span>
-                        <div className="flex items-center gap-2">
+                        <div className="hidden md:flex items-center gap-2">
                             <Button
                                 onClick={() => setShowSaveModal(true)}
                                 className="bg-green-500 hover:bg-green-600 text-white"
@@ -445,31 +445,48 @@ const Home = () => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex gap-2">
-                            <Button
-                                onClick={() => setReset(true)}
-                                variant="destructive"
-                                className="flex-1"
-                            >
-                                Clear
-                            </Button>
-                            <Button
-                                onClick={sendData}
-                                variant="default"
-                                className="flex-1 bg-blue-500 hover:bg-blue-600 relative"
-                                disabled={isLoading}
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <span className="opacity-0">Analyze</span>
-                                        <div className="absolute inset-0 flex items-center justify-center">
-                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        </div>
-                                    </>
-                                ) : (
-                                    'Analyze'
-                                )}
-                            </Button>
+                        <div className="flex flex-col gap-2">
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={() => setReset(true)}
+                                    variant="destructive"
+                                    className="flex-1"
+                                >
+                                    Clear
+                                </Button>
+                                <Button
+                                    onClick={sendData}
+                                    variant="default"
+                                    className="flex-1 bg-blue-500 hover:bg-blue-600 relative"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <span className="opacity-0">Analyze</span>
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        'Analyze'
+                                    )}
+                                </Button>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={() => setShowSaveModal(true)}
+                                    className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+                                >
+                                    <Save className="h-4 w-4 mr-2" />
+                                    Save
+                                </Button>
+                                <Button
+                                    onClick={handleLogout}
+                                    className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+                                >
+                                    Logout
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -477,36 +494,36 @@ const Home = () => {
 
             {/* Results Modal */}
             {showResults && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold text-gray-900">Analysis Results</h2>
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                    <div className="bg-gray-800/80 backdrop-blur-md p-8 rounded-lg shadow-2xl w-[90%] max-w-md border border-blue-500/30 max-h-[80vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-white">Analysis Results</h2>
                             <Button
                                 onClick={() => setShowResults(false)}
                                 variant="ghost"
-                                className="h-8 w-8 p-0"
+                                className="h-8 w-8 p-0 text-gray-300 hover:text-white"
                             >
                                 <X className="h-4 w-4" />
                             </Button>
                         </div>
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                             {responses.map((response, index) => (
                                 <div
                                     key={index}
-                                    className="border-b border-gray-200 pb-4 last:border-0"
+                                    className="border-b border-gray-600 pb-6 last:border-0"
                                 >
                                     <div className="mb-3">
-                                        <p className="text-sm font-medium text-blue-600">Quick Description</p>
-                                        <p className="text-lg font-semibold text-gray-900">{response.expr}</p>
+                                        <p className="text-sm font-medium text-blue-400">Quick Description</p>
+                                        <p className="text-lg font-semibold text-white mt-1">{response.expr}</p>
                                     </div>
 
                                     <div>
-                                        <p className="text-sm font-medium text-blue-600">Detailed Analysis</p>
-                                        <p className="text-gray-700 whitespace-pre-wrap">{response.result}</p>
+                                        <p className="text-sm font-medium text-blue-400">Detailed Analysis</p>
+                                        <p className="text-gray-300 whitespace-pre-wrap mt-1">{response.result}</p>
                                     </div>
 
                                     {response.assign && (
-                                        <span className="inline-block mt-3 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                        <span className="inline-block mt-3 text-xs bg-blue-900/50 text-blue-200 px-2 py-1 rounded border border-blue-500/30">
                                             Variable Value Set
                                         </span>
                                     )}
@@ -519,7 +536,7 @@ const Home = () => {
                                     setShowResults(false);
                                     setReset(true);
                                 }}
-                                className="w-full"
+                                className="w-full bg-blue-500 hover:bg-blue-600 text-white transition duration-200"
                             >
                                 Draw Something New
                             </Button>
@@ -531,7 +548,7 @@ const Home = () => {
             <canvas
                 ref={canvasRef}
                 id="canvas"
-                className={canvasClassName}
+                className={`${canvasClassName} touch-none`}
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
                 onMouseOut={stopDrawing}

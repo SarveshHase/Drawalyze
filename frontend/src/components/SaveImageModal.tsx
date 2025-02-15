@@ -26,21 +26,21 @@ const SaveImageModal: React.FC<SaveImageModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold text-gray-900">Save Drawing</h2>
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-800/80 backdrop-blur-md p-8 rounded-lg shadow-2xl w-[90%] max-w-md border border-blue-500/30">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-white">Save Drawing</h2>
                     <Button
                         onClick={onClose}
                         variant="ghost"
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 text-gray-300 hover:text-white"
                     >
                         <X className="h-4 w-4" />
                     </Button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="title" className="block text-sm font-medium text-gray-200">
                             Title
                         </label>
                         <input
@@ -48,13 +48,13 @@ const SaveImageModal: React.FC<SaveImageModalProps> = ({
                             id="title"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                             placeholder="Enter title"
                             required
                         />
                     </div>
                     <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-200">
                             Description
                         </label>
                         <textarea
@@ -62,22 +62,22 @@ const SaveImageModal: React.FC<SaveImageModalProps> = ({
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             rows={3}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                             placeholder="Enter description"
                             required
                         />
                     </div>
-                    <div className="flex justify-end space-x-2">
+                    <div className="flex justify-end space-x-3 mt-6">
                         <Button
                             type="button"
                             onClick={onClose}
-                            variant="outline"
+                            className="bg-gray-700 text-white hover:bg-gray-600 transition duration-200"
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
-                            className="bg-blue-500 hover:bg-blue-600"
+                            className={`text-white ${isLoading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"} transition duration-200`}
                             disabled={isLoading}
                         >
                             {isLoading ? (
