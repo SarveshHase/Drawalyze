@@ -5,7 +5,6 @@ import { Canvas } from "@react-three/fiber"
 import { OrbitControls } from "@react-three/drei"
 import authService from "@/appwrite/auth"
 import { Button } from "@/components/ui/button"
-import { useAppDispatch } from "@/store/hooks"
 import AnimatedCube from "@/components/AnimatedCube"
 
 const Signup: React.FC = () => {
@@ -15,7 +14,6 @@ const Signup: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [signupStatus, setSignupStatus] = useState<"idle" | "success" | "error">("idle")
   const [isLoading, setIsLoading] = useState(false)
-  const dispatch = useAppDispatch()
   const navigate = useNavigate()
 
   const handleSignup = async (e: React.FormEvent) => {
