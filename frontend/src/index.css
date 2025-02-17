@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prevent unwanted touch behaviors on mobile */
+body {
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+/* Ensure canvas takes full height on mobile */
+#root {
+  height: 100dvh;
+  overflow: hidden;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

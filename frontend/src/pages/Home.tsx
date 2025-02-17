@@ -65,20 +65,45 @@ const Home: React.FC = () => {
   const dispatch = useAppDispatch()
   const userData = useAppSelector(selectUserData)
 
-  // Initialize canvas on mount
-  useEffect(() => {
+  // Initialize canvas with proper device pixel ratio handling
+  const setupCanvas = () => {
     const canvas = canvasRef.current
     if (!canvas) return
 
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
+    // Get device pixel ratio and viewport size
+    const dpr = window.devicePixelRatio || 1
+    const rect = canvas.getBoundingClientRect()
+
+    // Set canvas size accounting for device pixel ratio
+    canvas.width = rect.width * dpr
+    canvas.height = rect.height * dpr
+
+    // Scale the context to ensure correct drawing operations
+    ctx.scale(dpr, dpr)
+
+    // Set canvas CSS size
+    canvas.style.width = `${rect.width}px`
+    canvas.style.height = `${rect.height}px`
 
     ctx.lineCap = "round"
     ctx.lineWidth = strokeWidth
     ctx.strokeStyle = color
+  }
+
+  // Initialize canvas on mount
+  useEffect(() => {
+    setupCanvas()
+    
+    // Handle orientation changes on mobile
+    const handleOrientationChange = () => {
+      setTimeout(setupCanvas, 100) // Wait for browser UI to settle
+    }
+    window.addEventListener('orientationchange', handleOrientationChange)
+    
+    return () => window.removeEventListener('orientationchange', handleOrientationChange)
   }, [])
 
   // Handle canvas reset
@@ -88,7 +113,7 @@ const Home: React.FC = () => {
     setReset(false)
   }, [reset])
 
-  // Handle window resize
+  // Handle window resize with device pixel ratio
   useEffect(() => {
     const updateCanvasSize = () => {
       const canvas = canvasRef.current
@@ -97,18 +122,43 @@ const Home: React.FC = () => {
       const ctx = canvas.getContext("2d")
       if (!ctx) return
 
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      const dpr = window.devicePixelRatio || 1
+      const rect = canvas.getBoundingClientRect()
 
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
+      // Store current canvas content
+      const tempCanvas = document.createElement('canvas')
+      const tempCtx = tempCanvas.getContext('2d')
+      if (!tempCtx) return
+      
+      tempCanvas.width = canvas.width
+      tempCanvas.height = canvas.height
+      tempCtx.drawImage(canvas, 0, 0)
 
-      ctx.putImageData(imageData, 0, 0)
+      // Resize canvas with new dimensions
+      canvas.width = rect.width * dpr
+      canvas.height = rect.height * dpr
+      canvas.style.width = `${rect.width}px`
+      canvas.style.height = `${rect.height}px`
+
+      // Scale context and restore content
+      ctx.scale(dpr, dpr)
+      ctx.drawImage(tempCanvas, 0, 0, rect.width, rect.height)
       ctx.lineCap = "round"
       ctx.lineWidth = strokeWidth
     }
-    updateCanvasSize()
-    window.addEventListener("resize", updateCanvasSize)
-    return () => window.removeEventListener("resize", updateCanvasSize)
+
+    // Debounce resize event for better performance
+    let resizeTimeout: NodeJS.Timeout
+    const debouncedResize = () => {
+      clearTimeout(resizeTimeout)
+      resizeTimeout = setTimeout(updateCanvasSize, 100)
+    }
+
+    window.addEventListener("resize", debouncedResize)
+    return () => {
+      window.removeEventListener("resize", debouncedResize)
+      clearTimeout(resizeTimeout)
+    }
   }, [strokeWidth])
 
   // Update stroke width
@@ -174,7 +224,17 @@ const Home: React.FC = () => {
   }
 
   // Touch drawing handlers
+  const getTouchPos = (canvas: HTMLCanvasElement, touch: React.Touch) => {
+    const rect = canvas.getBoundingClientRect()
+    const dpr = window.devicePixelRatio || 1
+    return {
+      x: (touch.clientX - rect.left) * dpr,
+      y: (touch.clientY - rect.top) * dpr
+    }
+  }
+
   const startTouchDrawing = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault() // Prevent scrolling while drawing
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -182,9 +242,14 @@ const Home: React.FC = () => {
     if (!ctx) return
 
     const touch = e.touches[0]
-    const rect = canvas.getBoundingClientRect()
+    const pos = getTouchPos(canvas, touch)
+    const dpr = window.devicePixelRatio || 1
+    
+    ctx.resetTransform() // Reset any existing transforms
+    ctx.scale(dpr, dpr)
+    
     ctx.beginPath()
-    ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top)
+    ctx.moveTo(pos.x / dpr, pos.y / dpr)
     setIsDrawing(true)
 
     ctx.globalCompositeOperation = isEraser ? "destination-out" : "source-over"
@@ -192,6 +257,7 @@ const Home: React.FC = () => {
   }
 
   const touchDraw = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault() // Prevent scrolling while drawing
     if (!isDrawing) return
 
     const canvas = canvasRef.current
@@ -201,10 +267,11 @@ const Home: React.FC = () => {
     if (!ctx) return
 
     const touch = e.touches[0]
-    const rect = canvas.getBoundingClientRect()
-
+    const pos = getTouchPos(canvas, touch)
+    const dpr = window.devicePixelRatio || 1
+    
     ctx.strokeStyle = isEraser ? "rgba(0,0,0,1)" : color
-    ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top)
+    ctx.lineTo(pos.x / dpr, pos.y / dpr)
     ctx.stroke()
   }
 
@@ -590,38 +657,53 @@ const Home: React.FC = () => {
             const ctx = canvas.getContext("2d");
             if (!ctx) return;
 
-            // Clear the canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Get current device pixel ratio and canvas dimensions
+            const dpr = window.devicePixelRatio || 1
+            const rect = canvas.getBoundingClientRect()
+
+            // Clear the canvas while preserving the pixel ratio scale
+            ctx.resetTransform() // Reset any existing transforms
+            ctx.scale(dpr, dpr)
+            ctx.clearRect(0, 0, rect.width, rect.height)
 
             // Create a new image
-            const image = new Image();
-            image.src = storageService.getFilePreview(imageId).toString();
+            const image = new Image()
+            image.src = storageService.getFilePreview(imageId).toString()
 
             // Wait for image to load then draw it
             await new Promise<boolean>((resolve, reject) => {
               image.onload = () => {
-                // Calculate scaling to fit canvas while maintaining aspect ratio
-                const scale = Math.min(
-                  canvas.width / image.width,
-                  canvas.height / image.height
-                );
+                requestAnimationFrame(() => {
+                  // Calculate scaling to fit canvas while maintaining aspect ratio
+                  const scale = Math.min(
+                    rect.width / image.width,
+                    rect.height / image.height
+                  )
                 
-                // Calculate centered position
-                const x = (canvas.width - image.width * scale) / 2;
-                const y = (canvas.height - image.height * scale) / 2;
+                  // Calculate centered position
+                  const x = (rect.width - image.width * scale) / 2
+                  const y = (rect.height - image.height * scale) / 2
 
-                // Draw the image
-                ctx.drawImage(
-                  image,
-                  x,
-                  y,
-                  image.width * scale,
-                  image.height * scale
-                );
-                resolve(true);
-              };
-              image.onerror = reject;
-            });
+                  // Draw the image
+                  ctx.drawImage(
+                    image,
+                    x,
+                    y,
+                    image.width * scale,
+                    image.height * scale
+                  )
+                  resolve(true)
+                })
+              }
+              image.onerror = reject
+            })
+
+            // Restore the drawing context state
+            ctx.resetTransform()
+            ctx.scale(dpr, dpr)
+            ctx.lineCap = "round"
+            ctx.lineWidth = strokeWidth
+            ctx.strokeStyle = color
 
             // Close the panel and show success message
             setShowSavedImages(false);
