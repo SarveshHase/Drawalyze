@@ -17,9 +17,10 @@ interface SavedImage {
 interface SavedImagesPanelProps {
   isOpen: boolean
   onClose: () => void
+  onImageSelect?: (imageId: string) => void
 }
 
-const SavedImagesPanel: React.FC<SavedImagesPanelProps> = ({ isOpen, onClose }) => {
+const SavedImagesPanel: React.FC<SavedImagesPanelProps> = ({ isOpen, onClose, onImageSelect }) => {
   const [savedImages, setSavedImages] = useState<SavedImage[]>([])
   const userData = useAppSelector(selectUserData)
 
@@ -62,18 +63,22 @@ const SavedImagesPanel: React.FC<SavedImagesPanelProps> = ({ isOpen, onClose }) 
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {savedImages.map((image) => (
-            <div key={image.$id} className="bg-gray-700/50 rounded-lg overflow-hidden shadow-md">
+            <div
+              key={image.$id}
+              className="bg-gray-700/50 rounded-lg overflow-hidden shadow-md cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
+              onClick={() => onImageSelect?.(image.drawingImage)}
+            >
               <img
                 src={storageService.getFilePreview(image.drawingImage).toString() || "/placeholder.svg"}
                 alt={image.title}
                 className="w-full h-40 object-cover"
               />
               <div className="p-4">
-  <h3 className="text-lg font-semibold text-white mb-1">{image.title}</h3>
-  <div className="max-h-[5rem] overflow-y-auto">
-    <p className="text-gray-300 text-sm pr-2">{image.description}</p>
-  </div>
-</div>
+                <h3 className="text-lg font-semibold text-white mb-1">{image.title}</h3>
+                <div className="max-h-[5rem] overflow-y-auto">
+                  <p className="text-gray-300 text-sm pr-2">{image.description}</p>
+                </div>
+              </div>
             </div>
           ))}
         </div>

@@ -6,13 +6,19 @@ import { colors } from "@/constants"
 import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { ColorSwatch, Slider, Alert } from "@mantine/core"
-import { Menu, Eraser, PenLine, Save, Image, AlertCircle, CheckCircle2 } from "lucide-react"
+import { Menu, Eraser, PenLine, Save, Image as ImageIcon, AlertCircle, CheckCircle2 } from "lucide-react"
 import "@mantine/core/styles.css"
 import authService from "@/appwrite/auth"
 import storageService from "@/appwrite/storage"
 import SaveImageModal from "@/components/SaveImageModal"
 import SavedImagesPanel from "@/components/SavedImagesPanel"
 import ResultsModal from "@/components/ResultsModal"
+
+// Type declarations
+declare const Image: {
+  new(): HTMLImageElement;
+  prototype: HTMLImageElement;
+};
 
 // Interface for analysis response
 interface Response {
@@ -572,14 +578,69 @@ const Home: React.FC = () => {
       />
 
       {/* Saved Images Panel */}
-      <SavedImagesPanel isOpen={showSavedImages} onClose={() => setShowSavedImages(false)} />
+      <SavedImagesPanel 
+        isOpen={showSavedImages} 
+        onClose={() => setShowSavedImages(false)}
+        onImageSelect={async (imageId) => {
+          try {
+            setIsLoading(true);
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return;
+
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Create a new image
+            const image = new Image();
+            image.src = storageService.getFilePreview(imageId).toString();
+
+            // Wait for image to load then draw it
+            await new Promise<boolean>((resolve, reject) => {
+              image.onload = () => {
+                // Calculate scaling to fit canvas while maintaining aspect ratio
+                const scale = Math.min(
+                  canvas.width / image.width,
+                  canvas.height / image.height
+                );
+                
+                // Calculate centered position
+                const x = (canvas.width - image.width * scale) / 2;
+                const y = (canvas.height - image.height * scale) / 2;
+
+                // Draw the image
+                ctx.drawImage(
+                  image,
+                  x,
+                  y,
+                  image.width * scale,
+                  image.height * scale
+                );
+                resolve(true);
+              };
+              image.onerror = reject;
+            });
+
+            // Close the panel and show success message
+            setShowSavedImages(false);
+            showAlert('success', 'Drawing loaded successfully!');
+          } catch (error) {
+            console.error("Error loading image:", error);
+            showAlert('error', 'Failed to load drawing. Please try again.');
+          } finally {
+            setIsLoading(false);
+          }
+        }}
+      />
 
       {/* Show Saved Button */}
       <Button
         onClick={() => setShowSavedImages(!showSavedImages)}
         className="fixed bottom-4 left-4 z-40 bg-blue-500 hover:bg-blue-600 text-white"
       >
-        <Image className="h-5 w-5 mr-2" />
+        <ImageIcon className="h-5 w-5 mr-2" />
         {showSavedImages ? "Hide" : "Show"} Saved
       </Button>
     </div>
