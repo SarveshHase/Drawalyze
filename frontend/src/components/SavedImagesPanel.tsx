@@ -69,9 +69,11 @@ const SavedImagesPanel: React.FC<SavedImagesPanelProps> = ({ isOpen, onClose }) 
                 className="w-full h-40 object-cover"
               />
               <div className="p-4">
-                <h3 className="text-lg font-semibold text-white mb-1 line-clamp-1">{image.title}</h3>
-                <p className="text-gray-300 text-sm h-12 line-clamp-2">{image.description}</p>
-              </div>
+  <h3 className="text-lg font-semibold text-white mb-1">{image.title}</h3>
+  <div className="max-h-[5rem] overflow-y-auto">
+    <p className="text-gray-300 text-sm pr-2">{image.description}</p>
+  </div>
+</div>
             </div>
           ))}
         </div>
