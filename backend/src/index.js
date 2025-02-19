@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import calculatorRouter from './routes/calculator.route.js';
-import { SERVER_URL, PORT, ENV } from './config/constants.js';
+import { PORT, ENV } from './config/constants.js';
 
 const app = express();
 
@@ -24,6 +24,6 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, SERVER_URL, () => {
-    console.log(`Server running in ${ENV} mode on http://${SERVER_URL}:${PORT}`);
+app.listen(PORT, () => {
+    console.log(`Server running in ${ENV} mode on port ${PORT}`);
 });
