@@ -6,7 +6,7 @@ import type { Mesh } from "three"
 const AnimatedCube: React.FC = () => {
   const meshRef = useRef<Mesh>(null!)
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     meshRef.current.rotation.x += delta * 0.2
     meshRef.current.rotation.y += delta * 0.3
   })
