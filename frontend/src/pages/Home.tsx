@@ -366,7 +366,7 @@ const Home: React.FC = () => {
   const canvasClassName = `fixed inset-0 w-full h-full bg-gray-900 ${isEraser ? "eraser-cursor" : "pen-cursor"}`
 
   return (
-    <div className="fixed inset-0 md:overflow-hidden bg-gray-900 touch-none">
+    <div className="canvas-page">
       {/* Alert Component */}
       {alertMessage && (
         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md">
@@ -666,8 +666,9 @@ const Home: React.FC = () => {
             ctx.scale(dpr, dpr)
             ctx.clearRect(0, 0, rect.width, rect.height)
 
-            // Create a new image
+            // Create a new image with cross-origin support
             const image = new Image()
+            image.crossOrigin = "anonymous"  // Enable cross-origin image loading
             image.src = storageService.getFilePreview(imageId).toString()
 
             // Wait for image to load then draw it
