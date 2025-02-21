@@ -53,7 +53,7 @@ const Login: React.FC = () => {
   }
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900 to-blue-900">
+    <div className="fixed inset-0 bg-gradient-to-br from-gray-900 to-blue-900 md:relative md:min-h-screen flex items-center justify-center">
       <div className="bg-gray-800/80 backdrop-blur-md p-8 rounded-lg shadow-2xl w-[90%] max-w-md border border-blue-500/30 flex flex-col items-center">
         <div className="w-full h-48 mb-6">
           <Suspense fallback={<div>Loading...</div>}>
@@ -117,4 +117,3 @@ const Login: React.FC = () => {
 }
 
 export default Login
-

@@ -119,3 +119,19 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(107, 114, 128); /* bg-gray-500 */
 }
+
+/* Mobile and Desktop viewport handling */
+@media (max-width: 768px) {
+  body {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+@media (min-width: 769px) {
+  body {
+    position: relative;
+    overflow-y: auto;
+  }
+}

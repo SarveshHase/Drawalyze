@@ -13,7 +13,7 @@ function App() {
   return (
     <MantineProvider>
       <BrowserRouter>
-        <div className="min-h-screen w-full bg-gray-900">
+        <div className="min-h-screen w-full bg-gray-900 overflow-x-hidden">
           <Routes>
           <Route path="/" element={
             <ProtectedRoute>
